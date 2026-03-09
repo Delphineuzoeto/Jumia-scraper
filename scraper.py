@@ -3,6 +3,14 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Referer": "https://www.google.com/",
+}
+
 # ── Add or remove URLs here anytime ───────────────────────────
 URLS = [
     "https://www.jumia.com.ng/phones-tablets/",
@@ -15,7 +23,7 @@ URLS = [
 
 def get_product_details(url):
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=HEADERS, timeout=10)
         soup = BeautifulSoup(response.text, 'html.parser')
 
         sellers = soup.select_one("p.-m.-pbs")
@@ -35,7 +43,7 @@ def get_product_details(url):
 
 
 def scrape_category(url):
-    response = requests.get(url)
+    response = requests.get(url, headers=HEADERS)
     soup = BeautifulSoup(response.text, 'html.parser')
     products = soup.select('article.prd')
     
