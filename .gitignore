@@ -2,4 +2,6 @@ credentials.json
 jumvenv/
 __pycache__/
 *.pyc
+*.csv
 .env
+tests/
