@@ -1,0 +1,29 @@
+name: Jumia Scraper
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'  # runs every 2 hours
+  workflow_dispatch:        # allows manual trigger from GitHub
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create credentials.json
+        run: echo '${{ secrets.GOOGLE_CREDENTIALS }}' > credentials.json
+
+      - name: Run scraper
+        run: python scheduler.py
+        timeout-minutes: 30
