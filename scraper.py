@@ -86,6 +86,9 @@ def run_scraper(urls=URLS):
 
         all_data.extend(enriched_data)
         print(f"  ✅ Category done — {len(enriched_data)} products")
+    if not all_data:
+        print("⚠️ No products scraped — possibly blocked.")
+        return pd.DataFrame()
 
     df = pd.DataFrame(all_data)
     df['reviews'] = df['reviews'].fillna(0)
