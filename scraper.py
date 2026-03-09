@@ -3,6 +3,15 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
+# ── Add or remove URLs here anytime ───────────────────────────
+URLS = [
+    "https://www.jumia.com.ng/phones-tablets/",
+    "https://www.jumia.com.ng/televisions/",
+    "https://www.jumia.com.ng/women-clothing/",
+    "https://www.jumia.com.ng/health-beauty/",
+    "https://www.jumia.com.ng/home-office/",
+]
+
 
 def get_product_details(url):
     try:
@@ -24,52 +33,59 @@ def get_product_details(url):
         print(f"⚠️ Failed: {url} — {e}")
         return {"sellers": None, "sellers_score": None, "rating": None, "reviews": None}
 
-# ── SCRAPE LISTING PAGE ────────────────────────────────────────
-url = "https://www.jumia.com.ng/phones-tablets/"
-response = requests.get(url)
-soup = BeautifulSoup(response.text, 'html.parser')
-products = soup.select('article.prd')
 
-data = []
-# for product in products:
-#     name = product.select_one(".name").text.strip()
-#     price = product.select_one(".prc").text.strip()
-#     discount = product.select_one(".bdg._dsct")
-#     discount = discount.text.strip() if discount else "No discount"
-#     product_url = "https://www.jumia.com.ng" + product.select_one("a.core")["href"]
+def scrape_category(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    products = soup.select('article.prd')
+    
+    # extract category name from URL
+    category = url.split(".com.ng/")[1].replace("/", "")
 
-#     data.append({
-#         "name": name,
-#         "price": price,
-#         "discount": discount,
-#         "url": product_url
-#     })
+    data = []
+    for product in products:
+        name = product.select_one(".name").text.strip()
+        price = product.select_one(".prc").text.strip()
+        discount = product.select_one(".bdg._dsct")
+        discount = discount.text.strip() if discount else "No discount"
+        product_url = "https://www.jumia.com.ng" + product.select_one("a.core")["href"]
 
-# ── ENRICH WITH PRODUCT DETAILS ────────────────────────────────
-# enriched_data = []
-# for item in data:
-#     print(f"Scraping: {item['name'][:50]}")
-#     details = get_product_details(item['url'])
-#     enriched_data.append({**item, **details})
-#     time.sleep(2)
+        data.append({
+            "category": category,
+            "name": name,
+            "price": price,
+            "discount": discount,
+            "url": product_url
+        })
 
-# ── SAVE ───────────────────────────────────────────────────────
-# df = pd.DataFrame(enriched_data)
-# df.to_csv("jumia_phones.csv", index=False)
-# print(f"\n✅ Done! {len(df)} products saved to jumia_phones.csv")
-# print(df.head())
+    return data
 
-df = pd.read_csv("jumia_phones.csv")
-print(df.columns.tolist())
-print(df.shape)
 
-#check null values
-print(df.isnull().sum())
+def run_scraper(urls=URLS):
+    all_data = []
 
-#get the name, sellers and rating thats still null
-print(df[df['reviews'].isnull()][['name', 'sellers', 'rating']])
+    for url in urls:
+        print(f"\n🛒 Scraping: {url}")
+        data = scrape_category(url)
+        print(f"  Found {len(data)} products")
 
-#fill the null reviews with 0
-df['reviews'] = df["reviews"].fillna(0)
-df.to_csv("jumia_phones.csv", index=False)
-print("\n✅ Null reviews filled with 0 and saved to jumia_phones.csv")
+        enriched_data = []
+        for item in data:
+            print(f"  → {item['name'][:50]}")
+            details = get_product_details(item['url'])
+            enriched_data.append({**item, **details})
+            time.sleep(1)
+
+        all_data.extend(enriched_data)
+        print(f"  ✅ Category done — {len(enriched_data)} products")
+
+    df = pd.DataFrame(all_data)
+    df['reviews'] = df['reviews'].fillna(0)
+    print(f"\n✅ Total products scraped: {len(df)}")
+    return df
+
+
+if __name__ == "__main__":
+    df = run_scraper()
+    df.to_csv("jumia_phones.csv", index=False)
+    print(f"✅ Saved to jumia_phones.csv")
