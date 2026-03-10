@@ -3,4 +3,5 @@ jumvenv/
 __pycache__/
 *.pyc
 .env
+*.cvc
 tests/
